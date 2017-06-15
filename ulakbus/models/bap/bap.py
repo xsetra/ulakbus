@@ -260,12 +260,25 @@ class BAPIsPaketi(Model):
         return "%s" % self.ad
 
 
+class BAPTeknikSartname(Model):
+    class Meta:
+        verbose_name = __(u"Teknik Şartname")
+        verbose_name_plural = __(u"Teknik Şartnameler")
+
+    sartname_dosyasi = field.File(__(u"Şartname Dosyası"), random_name=True)
+    aciklama = field.String(__(u"Açıklama"))
+    ilgili_proje = BAPProje()
+
+    def __unicode__(self):
+        return "%s" % self.aciklama
+
+
 class BAPButcePlani(Model):
     class Meta:
         verbose_name = __(u"Bap Bütçe Planı")
         verbose_name_plural = __(u"Bap Bütçe Planları")
         list_fields = ['_muhasebe_kod', 'kod_adi', 'ad', 'birim_fiyat', 'adet',
-                       'toplam_fiyat']
+                       'toplam_fiyat', '_teknik_sartname']
 
     muhasebe_kod = field.String(__(u"Muhasebe Kod"),
                                 choices='analitik_butce_dorduncu_duzey_gider_kodlari',
@@ -279,6 +292,7 @@ class BAPButcePlani(Model):
     ilgili_proje = BAPProje()
     onay_tarihi = field.Date(__(u"Onay Tarihi"))
     durum = field.Integer(__(u"Durum"), choices=talep_durum, default=1)
+    teknik_sartname = BAPTeknikSartname()
 
     def __unicode__(self):
         return "%s / %s / %s" % (self.muhasebe_kod, self.kod_adi, self.ad)
@@ -286,7 +300,11 @@ class BAPButcePlani(Model):
     def _muhasebe_kod(self):
         return self.muhasebe_kod
 
+    def _teknik_sartname(self):
+        return "Var" if self.teknik_sartname.aciklama else "Yok"
+
     _muhasebe_kod.title = __(u"Muhasebe Kodu")
+    _teknik_sartname.title = __(u"Teknik Şartname")
 
 
 class BAPGundem(Model):
