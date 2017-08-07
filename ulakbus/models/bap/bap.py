@@ -282,7 +282,7 @@ class BAPFirma(Model):
     adres = field.String(__(u"Adres"), required=True)
     e_posta = field.String(__(u"E-posta Adresi"), required=True, unique=True)
     vergi_no = field.String(__(u"Vergi Kimlik Numarası"), required=True)
-    vergi_dairesi = field.String(__(u"Vergi Dairesi"), required=True)
+    vergi_dairesi = field.Integer(__(u"Vergi Dairesi"), choices='vergi_daireleri', required=True)
     faaliyet_belgesi = field.File(_(u"Firma Faaliyet Belgesi"), random_name=False, required=True)
     faaliyet_belgesi_verilis_tarihi = field.Date(__(u"Faaliyet Belgesi Veriliş Tarihi"),
                                                  required=True)
@@ -295,14 +295,31 @@ class BAPFirma(Model):
         return "%s" % self.ad
 
 
+class BAPTeknikSartname(Model):
+    class Meta:
+        verbose_name = __(u"Teknik Şartname")
+        verbose_name_plural = __(u"Teknik Şartnameler")
+
+    sartname_dosyasi = field.File(__(u"Şartname Dosyası"), random_name=True)
+    aciklama = field.String(__(u"Açıklama"))
+    ilgili_proje = BAPProje()
+
+    def __unicode__(self):
+        return "%s" % self.aciklama
+
+
 class BAPButcePlani(Model):
     class Meta:
         verbose_name = __(u"Bap Bütçe Planı")
         verbose_name_plural = __(u"Bap Bütçe Planları")
-        list_fields = ['kod_adi', 'ad', 'birim_fiyat', 'adet', 'toplam_fiyat']
+        list_fields = ['_muhasebe_kod', 'kod_adi', 'ad', 'birim_fiyat', 'adet',
+                       'toplam_fiyat', 'teknik_sartname']
+
     # Öğretim üyesinin seçeceği muhasebe kodları
     muhasebe_kod_genel = field.Integer(__(u"Muhasebe Kod"),
                                        choices='bap_ogretim_uyesi_gider_kodlari', default=1)
+
+
     muhasebe_kod = field.String(__(u"Muhasebe Kod"),
                                 choices='analitik_butce_dorduncu_duzey_gider_kodlari',
                                 default="03.2.6.90")
@@ -319,12 +336,65 @@ class BAPButcePlani(Model):
     ozellik = field.Text(__(u"Özellik(Şartname Özeti)"), required=True)
     kazanan_firma = BAPFirma()
 
+    teknik_sartname = BAPTeknikSartname()
+
     def __unicode__(self):
         return "%s / %s / %s" % (self.muhasebe_kod or self.muhasebe_kod_genel, self.kod_adi,
                                  self.ad)
 
     def _muhasebe_kod(self):
         return self.muhasebe_kod or self.muhasebe_kod_genel
+
+    _muhasebe_kod.title = __(u"Muhasebe Kodu")
+
+
+class BAPEtkinlikProje(Model):
+    class Meta:
+        verbose_name = __(u"Bilimsel Etkinliklere Katılım Desteği")
+        verbose_name_plural = __(u"Bilimsel Etkinliklere Katılım Destekleri")
+        list_filters = ['durum']
+
+    ulke = field.String(__(u"Ülke"), required=True)
+    sehir = field.String(__(u"Şehir"), required=True)
+    bildiri_basligi = field.String(__(u"Etkinlik Başlığı"), required=True)
+    baslangic = field.Date(__(u"Başlangıç Tarihi"), required=True)
+    bitis = field.Date(__(u"Bitiş Tarihi"), required=True)
+    katilim_turu = field.Integer(__(u"Katılım Turu"), required=True,
+                                 choices='bap_bilimsel_etkinlik_katilim_turu')
+    etkinlik_lokasyon = field.Integer(__(u"Etkinlik Türü"), required=True,
+                                      choices="arastirma_hedef_lokasyon")
+    basvuru_yapan = Okutman()
+    durum = field.Integer(__(u"Durum"), choices='bap_bilimsel_etkinlik_butce_talep_durum')
+    onay_tarihi = field.Date(__(u"Onay Tarihi"))
+
+    class EtkinlikButce(ListNode):
+        class Meta:
+            verbose_name = __(u"Bilimsel Etkinliklere Katılım Desteği Bütçe Planı")
+            verbose_name_plural = __(u"Bilimsel Etkinliklere Katılım Desteği Bütçe Planları")
+
+        talep_turu = field.Integer(__(u"Talep Türü"), required=True,
+                                   choices='bap_bilimseL_etkinlik_butce_talep_turleri')
+        muhasebe_kod = field.String(__(u"Muhasebe Kod"),
+                                    choices='analitik_butce_dorduncu_duzey_gider_kodlari',
+                                    default="03.2.6.90")
+        istenen_tutar = field.Float(__(u"Talep Edilen Tutar"), required=True)
+
+    class Degerlendirmeler(ListNode):
+        class Meta:
+            verbose_name = __(u"Bilimsel Etkinliklere Katılım Desteği Değerlendirmesi")
+            verbose_name_plural = __(u"Bilimsel Etkinliklere Katılım Desteği Değerlendirmeleri")
+
+        aciklama = field.Text(_(u"Açıklama"), required=False)
+        degerlendirme_sonuc = field.Integer(_(u"Değerlendirme Sonucu"),
+                                            choices='bap_proje_degerlendirme_sonuc')
+
+    def __unicode__(self):
+        return "%s | %s" % (self.bildiri_basligi, self.basvuru_yapan.__unicode__())
+
+    def _teknik_sartname(self):
+        return "Var" if self.teknik_sartname.aciklama else "Yok"
+
+    _teknik_sartname.title = __(u"Teknik Şartname")
 
 
 class BAPGundem(Model):
@@ -335,6 +405,7 @@ class BAPGundem(Model):
                        'oturum_tarihi', 'karar_no', 'karar_tarihi']
 
     proje = BAPProje()
+    etkinlik = BAPEtkinlikProje()
     gundem_tipi = field.String(__(u"Gündem Tipi"), choices='bap_komisyon_gundemleri', default=1)
     gundem_aciklama = field.Text(__(u"Gündem Açıklaması"))
     oturum_numarasi = field.Integer(__(u"Oturum Numarası"), default=0)
@@ -345,12 +416,14 @@ class BAPGundem(Model):
     sonuclandi = field.Boolean(__(u"Kararın Sonuçlandırılması"), default=False)
 
     def _proje_adi(self):
-        return "%s" % self.proje.ad
+        return "%s" % self.proje.ad if self.proje.key else self.etkinlik.bildiri_basligi
 
     _proje_adi.title = __(u"Projenin Adı")
 
     def _proje_yurutucusu(self):
-        return "%s %s" % (self.proje.yurutucu.ad, self.proje.yurutucu.soyad)
+        return "%s %s" % (
+            (self.proje.yurutucu.ad, self.proje.yurutucu.soyad) if self.proje.key else (
+                self.etkinlik.basvuru_yapan.ad, self.etkinlik.basvuru_yapan.soyad))
 
     _proje_yurutucusu.title = __(u"Proje Yürütücüsü")
 
@@ -459,3 +532,5 @@ class BAPTeklifFiyatIsleme(Model):
             '-toplam_fiyat')
 
         return firmalar[0], firmalar[1]
+
+
