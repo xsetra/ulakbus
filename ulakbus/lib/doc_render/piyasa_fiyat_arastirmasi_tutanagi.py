@@ -65,6 +65,6 @@ def piyasa_fiyat_arastirmasi_tutanagi_uret(context_data, wants_pdf=False):
     """
     template = "piyasa_fiyat_arastirmasi_tutanagi.odt"
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

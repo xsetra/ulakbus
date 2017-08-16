@@ -44,6 +44,6 @@ def dogrudan_tek_kaynak_uret(context_data, wants_pdf=False):
     """
     template = "dogrudan_tek_kaynak.odt"
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

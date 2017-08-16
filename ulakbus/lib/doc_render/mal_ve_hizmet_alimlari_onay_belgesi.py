@@ -54,6 +54,6 @@ def mal_ve_hizmet_alimlari_onay_belgesi_uret(context_data, wants_pdf=False):
     """
     template = "mal_ve_hizmet_alimlari_onay_belgesi.odt"
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

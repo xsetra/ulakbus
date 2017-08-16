@@ -29,6 +29,6 @@ def bap_komisyon_toplanti_tutanagi_uret(context_data, wants_pdf=False):
     """
     template = "bap_komisyon_toplanti_tutanagi.odt"
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

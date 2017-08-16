@@ -40,6 +40,6 @@ def bap_sozlesme_uret(context_data, wants_pdf=False):
 
     template = "bap_sozlesme.odt"
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

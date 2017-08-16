@@ -76,6 +76,6 @@ def tasinir_islem_fisi_uret(context_data, wants_pdf=False):
     """
     template = "tasinir_islem_fisi.odt"
     rd = RenderDocument(template=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url

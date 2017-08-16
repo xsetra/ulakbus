@@ -52,6 +52,6 @@ def siparis_formu_uret(context_data, wants_pdf=False):
     template = "siparis_formu.odt"
 
     rd = RenderDocument(template_name=template,
-                        context=**context_data,
+                        context=context_data,
                         wants_pdf=wants_pdf)
     return rd.doc_url
